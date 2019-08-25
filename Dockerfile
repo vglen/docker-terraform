@@ -7,8 +7,6 @@ ENV TERRAFORM_SHA256SUM=a0fa11217325f76bf1b4f53b0f7a6efb1be1826826ef8024f2f45e60
 
 RUN mkdir -p ~/.ssh && echo "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 
-COPY files/terminal-to-html /usr/local/bin/
-
 RUN apt-get update && apt-get -y dist-upgrade && apt-get autoremove && apt-get install -y ruby-full zip curl wget jq tree git && \
     curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
     echo "${TERRAFORM_SHA256SUM}  terraform_${TERRAFORM_VERSION}_linux_amd64.zip" > terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
