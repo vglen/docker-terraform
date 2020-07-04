@@ -16,19 +16,19 @@ command:
     stderr: []
     timeout: 5000
     skip: False
+  ansible-version:
+    exit-status: 0
+    exec: 'ansible --version'
+    stdout:
+      - 'ansible 2.9.9'
+    stderr: []
+    timeout: 5000
+    skip: False
   awscli-version:
     exit-status: 0
     exec: "aws --version|awk '{print $1}'"
     stdout:
       - 'aws-cli/1.18.55'
-    stderr: []
-    timeout: 5000
-    skip: False
-  ansible-version:
-    exit-status: 0
-    exec: 'ansible --version'
-    stdout:
-      - 'ansible 2.9.6'
     stderr: []
     timeout: 5000
     skip: False
