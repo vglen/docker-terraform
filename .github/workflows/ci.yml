@@ -1,0 +1,64 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Push to Amazon ECR
+
+jobs:
+  deploy:
+    name: build-push
+    needs:
+      - 'hadolint'
+      - 'yamllint'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1.3.2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1.0.4
+
+    - name: Tag Image
+      id: vars
+      run: |
+        echo ::set-output name=tag::$(cat VERSION.txt)
+      shell: bash
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: awscli
+      run: |
+        find . -type f | wc -l
+        sleep 30
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{steps.vars.outputs.tag}} .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{steps.vars.outputs.tag}}
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:${{steps.vars.outputs.tag}}"
+
+  hadolint:
+    name: 'hadolint'
+    steps:
+    uses: brpaz/hadolint-action@master
+
+  yamllint:
+    name: 'yamllint'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: 'actions/checkout@v2'
+      - uses: 'actions/setup-python@v1'
+      - uses: 'BSFishy/pip-action@v1'
+        with:
+          packages: |
+            yamllint==1.23.0
+      - run: |
+          yamllint ./ .yamllint
