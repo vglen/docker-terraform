@@ -1,0 +1,55 @@
+---
+command:
+  alpine-version:
+    exit-status: 0
+    exec: 'cat /etc/alpine-release'
+    stdout:
+      - '3.12.0'
+    stderr: []
+    timeout: 5000
+    skip: False
+  ansible-lint-version:
+    exit-status: 0
+    exec: 'ansible-lint --version'
+    stdout:
+      - 'ansible-lint 4.2.0'
+    stderr: []
+    timeout: 5000
+    skip: False
+  awscli-version:
+    exit-status: 0
+    exec: "aws --version|awk '{print $1}'"
+    stdout:
+      - 'aws-cli/1.18.55'
+    stderr: []
+    timeout: 5000
+    skip: False
+  ansible-version:
+    exit-status: 0
+    exec: 'ansible --version'
+    stdout:
+      - 'ansible 2.9.6'
+    stderr: []
+    timeout: 5000
+    skip: False
+  jq-version:
+    exit-status: 0
+    exec: 'jq --version'
+    stdout:
+      - 'jq-master-v20200428-28-g864c859e9d'
+    stderr: []
+    timeout: 5000
+    skip: False
+  terraform-version:
+    exit-status: 0
+    exec: 'terraform version'
+    stdout:
+      - 'Terraform v0.12.28'
+  yamllint-version:
+    exit-status: 0
+    exec: 'yamllint --version'
+    stdout:
+      - 'yamllint 1.23.0'
+    stderr: []
+    timeout: 5000
+    skip: False

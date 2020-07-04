@@ -7,6 +7,7 @@ ENV TERRAFORM_SHA256SUM=be99da1439a60942b8d23f63eba1ea05ff42160744116e84f46fc24f
 WORKDIR /
 
 RUN apk add --no-cache \
+    aws-cli~=1.18 \
     git~=2.26.2 \
     make~=4.3 \
     openssh~=8.3_p1 \
