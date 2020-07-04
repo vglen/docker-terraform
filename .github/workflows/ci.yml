@@ -1,7 +1,12 @@
+---
+name: 'CI'
 on:
   push:
     branches:
-      - master
+      - 'master'
+  pull_request:
+    branches:
+      - '*'
 
 name: Push to Amazon ECR
 
