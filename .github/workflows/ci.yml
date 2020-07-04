@@ -1,0 +1,87 @@
+---
+name: 'CI'
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build_test_push_docker_image:
+    name: 'build-test-push-docker-image'
+    needs:
+      - 'hadolint'
+      - 'yamllint'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'checkout'
+        uses: 'actions/checkout@v2'
+      - name: 'configure aws credentials'
+        uses: 'aws-actions/configure-aws-credentials@v1.3.2'
+        with:
+          aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          aws-region: '${{ secrets.AWS_REGION }}'
+      - name: 'login to amazon ecr'
+        id: 'login-ecr'
+        uses: 'aws-actions/amazon-ecr-login@v1.0.4'
+      - name: 'tag Image'
+        id: 'vars'
+        run: 'echo ::set-env name=TAG::$(cat VERSION.txt)'
+        shell: 'bash'
+      - name: 'build and tag image'
+        id: 'build-tag-image'
+        env:
+          ECR_REGISTRY: '${{ steps.login-ecr.outputs.registry }}'
+          ECR_REPOSITORY: 'shark/terraform'
+        run: |
+          export IMAGE_TAG="${ECR_REGISTRY}/${ECR_REPOSITORY}:${TAG}"
+          docker build -t ${IMAGE_TAG} .
+          echo "::set-env name=IMAGE_TAG::${IMAGE_TAG}"
+      - name: 'goss testing'
+        env:
+          GOSS_VERSION: '0.3.11'
+          GOSS_SHA256: '7a751c102abac61fd8dff45f87f36c3732cb5158e1414ab78e6877864fc2f7a4'
+          DGOSS_SHA256: '54da12b39a45242684a492f23842b17351af3fcda537c7f30bf4182acef10c36'
+          GOSS_FILES_STRATEGY: 'cp'
+          GOSS_SLEEP: 5
+          GOSS_RELEASES: 'https://github.com/aelsabbahy/goss/releases/download'
+          GOSS_PATH: './goss'
+          DGOSS_PATH: './dgoss'
+        run: |
+          curl -sSL ${GOSS_RELEASES}/v${GOSS_VERSION}/goss-linux-amd64 -o ${GOSS_PATH}
+          curl -sSL ${GOSS_RELEASES}/v${GOSS_VERSION}/dgoss -o ${DGOSS_PATH}
+          echo "$GOSS_SHA256  ${GOSS_PATH}" | sha256sum -c
+          echo "$DGOSS_SHA256  ${DGOSS_PATH}" | sha256sum -c
+          chmod +rx ${GOSS_PATH} ${DGOSS_PATH}
+          ${DGOSS_PATH} run -it --entrypoint "sh" ${IMAGE_TAG}
+      - name: 'push image to ecr'
+        if: "${{ github.ref == 'refs/heads/main' }}"
+        id: 'push-image'
+        run: |
+          docker push ${IMAGE_TAG}
+
+  hadolint:
+    name: 'hadolint'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: 'actions/checkout@v2'
+      - uses: 'burdzwastaken/hadolint-action@master'
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          HADOLINT_ACTION_DOCKERFILE_FOLDER: '.'
+
+  yamllint:
+    name: 'yamllint'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: 'actions/checkout@v2'
+      - uses: 'actions/setup-python@v1'
+      - uses: 'BSFishy/pip-action@v1'
+        with:
+          packages: |
+            yamllint==1.23.0
+      - run: |
+          yamllint ./ .yamllint
