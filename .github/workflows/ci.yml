@@ -14,7 +14,7 @@ jobs:
     needs:
       - 'hadolint'
       - 'yamllint'
-    runs-on: 'self-hosted'
+    runs-on: 'ubuntu-latest'
     steps:
       - name: 'checkout'
         uses: 'actions/checkout@v2'
@@ -65,7 +65,7 @@ jobs:
 
   hadolint:
     name: 'hadolint'
-    runs-on: 'self-hosted'
+    runs-on: 'ubuntu-latest'
     steps:
       - uses: 'actions/checkout@v2'
       - uses: 'burdzwastaken/hadolint-action@master'
