@@ -1,49 +1,56 @@
 ---
-name: 'CI'
 on:
   push:
-    branches:
-      - 'main'
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - '*'
+env:
+  IMAGE_NAME: 'terraform'
+
+name: 'ci'
 
 jobs:
-  build_test_push_docker_image:
-    name: 'build-test-push-docker-image'
+  build_test_scan_docker_image:
+    name: 'build-test-scan'
     needs:
       - 'hadolint'
       - 'yamllint'
     runs-on: 'ubuntu-latest'
     steps:
+      - name: 'setup-go'
+        uses: 'actions/setup-go@v1'
+        with:
+          go-version: 1.14
       - name: 'checkout'
         uses: 'actions/checkout@v2'
-      - name: 'configure aws credentials'
-        uses: 'aws-actions/configure-aws-credentials@v1.3.2'
-        with:
-          aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
-          aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
-          aws-region: '${{ secrets.AWS_REGION }}'
-      - name: 'login to amazon ecr'
-        id: 'login-ecr'
-        uses: 'aws-actions/amazon-ecr-login@v1.0.4'
-      - name: 'tag Image'
+      - name: 'github-branch'
+        run: |
+          echo running on branch ${GITHUB_REF}
+      - name: 'github-event'
+        run: |
+          echo my event was ${GITHUB_EVENT_NAME}
+      - name: 'tag-image'
         id: 'vars'
         run: 'echo ::set-env name=TAG::$(cat VERSION.txt)'
         shell: 'bash'
+      - name: 'float-tag-image'
+        id: 'vars-float'
+        run: "echo ::set-env name=FLOAT_TAG::$(cat VERSION.txt|sed 's/^.*[^0-9]\\([0-9]*\\.[0-9]*\\.[0-9]*\\).*$/\\1/' | awk -F '.' '{print $2}')"
       - name: 'build and tag image'
         id: 'build-tag-image'
-        env:
-          ECR_REGISTRY: '${{ steps.login-ecr.outputs.registry }}'
-          ECR_REPOSITORY: 'shark/terraform'
         run: |
           export IMAGE_TAG="${ECR_REGISTRY}/${ECR_REPOSITORY}:${TAG}"
+          export IMAGE_FLOAT_TAG="${ECR_REGISTRY}/${ECR_REPOSITORY}:${FLOAT_TAG}"
           docker build -t ${IMAGE_TAG} .
+          docker tag ${IMAGE_TAG} ${IMAGE_FLOAT_TAG}
           echo "::set-env name=IMAGE_TAG::${IMAGE_TAG}"
+          echo "::set-env name=IMAGE_FLOAT_TAG::${IMAGE_FLOAT_TAG}"
       - name: 'goss testing'
         env:
-          GOSS_VERSION: '0.3.11'
-          GOSS_SHA256: '7a751c102abac61fd8dff45f87f36c3732cb5158e1414ab78e6877864fc2f7a4'
+          GOSS_VERSION: '0.3.13'
+          GOSS_SHA256: 'eb3522ff9682736ff61e2ad114de227de98debcf8a03ca66fcda3917577313e0'
           DGOSS_SHA256: '54da12b39a45242684a492f23842b17351af3fcda537c7f30bf4182acef10c36'
           GOSS_FILES_STRATEGY: 'cp'
           GOSS_SLEEP: 5
@@ -57,11 +64,32 @@ jobs:
           echo "$DGOSS_SHA256  ${DGOSS_PATH}" | sha256sum -c
           chmod +rx ${GOSS_PATH} ${DGOSS_PATH}
           ${DGOSS_PATH} run -it --entrypoint "sh" ${IMAGE_TAG}
-      - name: 'push image to ecr'
-        if: "${{ github.ref == 'refs/heads/main' }}"
+      - name: 'scanning'
+        uses: 'aquasecurity/trivy-action@0.0.7'
+        with:
+          image-ref: '${IMAGE_NAME}:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: True
+          severity: 'CRITICAL,HIGH'
+
+  push_docker_image:
+    name: 'push-image'
+    needs:
+      - 'hadolint'
+      - 'yamllint'
+      - 'build_test_scan_docker_image'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'log-into-github-registry'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - name: 'push-image'
+        if: "github.event_name == 'push'"
         id: 'push-image'
         run: |
-          docker push ${IMAGE_TAG}
+          docker tag ${IMAGE_TAG} docker.pkg.github.com/${{ github.repository }}/terraform:${FLOAT_TAG}
+          docker push docker.pkg.github.com/${{ github.repository }}/terraform:${FLOAT_TAG}
 
   hadolint:
     name: 'hadolint'
@@ -69,19 +97,12 @@ jobs:
     steps:
       - uses: 'actions/checkout@v2'
       - uses: 'burdzwastaken/hadolint-action@master'
-        env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-          HADOLINT_ACTION_DOCKERFILE_FOLDER: '.'
 
   yamllint:
     name: 'yamllint'
     runs-on: 'ubuntu-latest'
     steps:
       - uses: 'actions/checkout@v2'
-      - uses: 'actions/setup-python@v1'
-      - uses: 'BSFishy/pip-action@v1'
+      - uses: 'ibiqlik/action-yamllint@master'
         with:
-          packages: |
-            yamllint==1.23.0
-      - run: |
-          yamllint ./ .yamllint
+          config_file: '.yamllint'
