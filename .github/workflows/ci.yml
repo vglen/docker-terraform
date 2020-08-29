@@ -58,7 +58,7 @@ jobs:
           echo "$GOSS_SHA256  ${GOSS_PATH}" | sha256sum -c
           echo "$DGOSS_SHA256  ${DGOSS_PATH}" | sha256sum -c
           chmod +rx ${GOSS_PATH} ${DGOSS_PATH}
-          ${DGOSS_PATH} run -it --entrypoint "sh" ${IMAGE_TAG}
+          ${DGOSS_PATH} run -it --entrypoint "sh" ${IMAGE_NAME}
       - name: 'scanning'
         uses: 'aquasecurity/trivy-action@0.0.7'
         with:
