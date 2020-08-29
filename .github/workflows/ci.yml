@@ -13,7 +13,7 @@ name: 'ci'
 
 jobs:
   build_test_scan_push_docker_image:
-    name: 'build-test-scan'
+    name: 'build-test-scan-push'
     needs:
       - 'hadolint'
       - 'yamllint'
