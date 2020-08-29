@@ -83,9 +83,12 @@ jobs:
       - name: 'push-image'
         if: "github.event_name == 'push'"
         id: 'push-image'
+        env:
+          SOURCE: 'terraform:latest'
+          TARGET: 'docker.pkg.github.com/vglen/docker-terraform/terraform:13'
         run: |
-          docker tag ${IMAGE_FLOAT_TAG} docker.pkg.github.com/${{ github.repository }}/${IMAGE_NAME}:${FLOAT_TAG}
-          docker push docker.pkg.github.com/${{ github.repository }}/${IMAGE_NAME}:${FLOAT_TAG}
+          docker tag ${SOURCE} ${TARGET}
+          docker push ${TARGET}
 
   hadolint:
     name: 'hadolint'
