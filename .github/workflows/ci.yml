@@ -42,7 +42,6 @@ jobs:
         id: 'build-tag-image'
         run: |
           docker build --file Dockerfile --tag ${IMAGE_NAME} .
-          export IMAGE_FLOAT_TAG="${IMAGE_NAME}:${FLOAT_TAG}"
       - name: 'goss testing'
         env:
           GOSS_VERSION: '0.3.13'
@@ -87,6 +86,7 @@ jobs:
           SOURCE: 'terraform:latest'
           TARGET: 'docker.pkg.github.com/vglen/docker-terraform/terraform:13'
         run: |
+          docker build --file Dockerfile --tag ${IMAGE_NAME} .
           docker tag ${SOURCE} ${TARGET}
           docker push ${TARGET}
 
