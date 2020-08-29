@@ -12,7 +12,7 @@ env:
 name: 'ci'
 
 jobs:
-  build_test_scan_docker_image:
+  build_test_scan_push_docker_image:
     name: 'build-test-scan'
     needs:
       - 'hadolint'
