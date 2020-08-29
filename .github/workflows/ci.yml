@@ -62,7 +62,7 @@ jobs:
       - name: 'scanning'
         uses: 'aquasecurity/trivy-action@0.0.7'
         with:
-          image-ref: '${IMAGE_NAME}:latest'
+          image-ref: 'terraform:latest'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: True
