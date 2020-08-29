@@ -42,6 +42,7 @@ jobs:
         id: 'build-tag-image'
         run: |
           docker build --file Dockerfile --tag ${IMAGE_NAME} .
+          export IMAGE_FLOAT_TAG="${IMAGE_NAME}:${FLOAT_TAG}"
       - name: 'goss testing'
         env:
           GOSS_VERSION: '0.3.13'
@@ -83,7 +84,7 @@ jobs:
         if: "github.event_name == 'push'"
         id: 'push-image'
         run: |
-          docker tag ${IMAGE_TAG} docker.pkg.github.com/${{ github.repository }}/${IMAGE_NAME}:${FLOAT_TAG}
+          docker tag ${IMAGE_FLOAT_TAG} docker.pkg.github.com/${{ github.repository }}/${IMAGE_NAME}:${FLOAT_TAG}
           docker push docker.pkg.github.com/${{ github.repository }}/${IMAGE_NAME}:${FLOAT_TAG}
 
   hadolint:
