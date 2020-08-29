@@ -41,12 +41,7 @@ jobs:
       - name: 'build and tag image'
         id: 'build-tag-image'
         run: |
-          export IMAGE_TAG="${ECR_REGISTRY}/${ECR_REPOSITORY}:${TAG}"
-          export IMAGE_FLOAT_TAG="${ECR_REGISTRY}/${ECR_REPOSITORY}:${FLOAT_TAG}"
-          docker build -t ${IMAGE_TAG} .
-          docker tag ${IMAGE_TAG} ${IMAGE_FLOAT_TAG}
-          echo "::set-env name=IMAGE_TAG::${IMAGE_TAG}"
-          echo "::set-env name=IMAGE_FLOAT_TAG::${IMAGE_FLOAT_TAG}"
+          docker build --file Dockerfile --tag ${IMAGE_NAME} .
       - name: 'goss testing'
         env:
           GOSS_VERSION: '0.3.13'
@@ -88,8 +83,8 @@ jobs:
         if: "github.event_name == 'push'"
         id: 'push-image'
         run: |
-          docker tag ${IMAGE_TAG} docker.pkg.github.com/${{ github.repository }}/terraform:${FLOAT_TAG}
-          docker push docker.pkg.github.com/${{ github.repository }}/terraform:${FLOAT_TAG}
+          docker tag ${IMAGE_TAG} docker.pkg.github.com/${{ github.repository }}/${IMAGE_NAME}:${FLOAT_TAG}
+          docker push docker.pkg.github.com/${{ github.repository }}/${IMAGE_NAME}:${FLOAT_TAG}
 
   hadolint:
     name: 'hadolint'
