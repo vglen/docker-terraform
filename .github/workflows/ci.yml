@@ -67,6 +67,9 @@ jobs:
           exit-code: '1'
           ignore-unfixed: True
           severity: 'CRITICAL,HIGH'
+      - name: 'log-into-github-registry'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
       - name: 'push-image'
         if: "github.event_name == 'push'"
         id: 'push-image'
