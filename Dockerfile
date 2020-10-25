@@ -5,14 +5,10 @@ ENV TERRAFORM_VERSION=0.13.5
 ENV TERRAFORM_SHA256SUM=f7b7a7b1bfbf5d78151cfe3d1d463140b5fd6a354e71a7de2b5644e652ca5147
 
 RUN apk add --no-cache \
-    ruby-full~=2.7.1 \
-    jq~=1.6 \
-    tree~=1.8.0 \
     git~=2.26.2 &&\
     apk add --no-cache --virtual .build-deps \
     zip~=3.0 \
     wget~=1.20.3-r1 \
-    curl~=7.69.1 &&\
     curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
     echo "${TERRAFORM_SHA256SUM}  terraform_${TERRAFORM_VERSION}_linux_amd64.zip" > terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
     sha256sum -c terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
