@@ -60,9 +60,9 @@ jobs:
           chmod +rx ${GOSS_PATH} ${DGOSS_PATH}
           ${DGOSS_PATH} run -it --entrypoint "sh" ${{ steps.vars.outputs.TAG }}
       - name: 'scanning'
-        uses: 'aquasecurity/trivy-action@0.0.7'
+        uses: 'aquasecurity/trivy-action@0.0.8'
         with:
-          image-ref: 'terraform:latest'
+          image-ref: "${{ steps.vars.outputs.TAG }}"
           format: 'table'
           exit-code: '1'
           ignore-unfixed: True
