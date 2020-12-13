@@ -77,6 +77,7 @@ jobs:
           SOURCE: "terraform:${{ steps.vars.outputs.TAG }}"
           TARGET: 'docker.pkg.github.com/vglen/docker-terraform/terraform:14'
         run: |
+          docker build -t  ${SOURCE} .
           docker tag ${SOURCE} ${TARGET}
           docker push ${TARGET}
 
