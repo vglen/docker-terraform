@@ -74,7 +74,7 @@ jobs:
         if: "github.event_name == 'push'"
         id: 'push-image'
         env:
-          SOURCE: 'terraform:latest'
+          SOURCE: "terraform:${{ steps.vars.outputs.TAG }}"
           TARGET: 'docker.pkg.github.com/vglen/docker-terraform/terraform:14'
         run: |
           docker tag ${SOURCE} ${TARGET}
